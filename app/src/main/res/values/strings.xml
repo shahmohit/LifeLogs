@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">LifeLogs</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="fname">First Name</string>
+    <string name="lname">Last Name</string>
+    <string name="email">Email Address</string>
+    <string name="signin">Enter Details</string>
+    <string name="title_activity_lifelog">LifeLogs</string>
+    <string name="action_audio">Record Audio</string>
+    <string name="action_camera">Take Picture</string>
+    <string name="action_video">Record Video</string>
+    <string name="action_search">Search</string>
+    <string name="title_activity_audio">AudioActivity</string>
+    <string name="title_activity_search">LifeLogs</string>
+    <string-array name="drawer_array">
+    <item>User</item>
+    <item>Search</item>
+    <item>Settings</item></string-array>
+</resources>

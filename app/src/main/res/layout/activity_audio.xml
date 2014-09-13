@@ -1,0 +1,145 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="100dp"
+    android:paddingLeft="0dp"
+    android:paddingRight="0dp"
+    android:paddingTop="0dp"
+    android:paddingBottom="32dp"
+    android:background="@color/secondary"
+    tools:context="com.android.lifelogs.AudioActivity">
+
+    <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="60dp"
+        android:text="Record Audio"
+        android:layout_centerHorizontal="true"
+        android:textAlignment="center"
+        android:gravity="center"
+        android:textColor="#ffffffff"
+        android:textSize="20dp"
+        android:background="@color/primary"
+        android:id="@+id/atitle"/>
+
+    <com.android.lifelogs.VisualizerView
+        android:layout_width="fill_parent"
+        android:layout_height="80dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:id="@+id/canvas"
+        android:layout_below="@+id/atitle"/>
+
+    <GridLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/atitle"
+        android:id="@+id/recordLayout">
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/recordbtn"
+            android:onClick="record"
+            android:text="Start Recording"/>
+    </GridLayout>
+
+    <GridLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/recordLayout"
+        android:id="@+id/timeLayout">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/recordtime"
+            android:text="00:00"
+            android:textSize="24dp"/>
+
+    </GridLayout>
+
+    <GridLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/timeLayout"
+        android:id="@+id/controlLayout">
+
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/playbtn"
+            android:src="@drawable/ic_action_play"
+            android:onClick="play"
+            android:background="@drawable/buttons"
+            android:visibility="visible"/>
+
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="20dp"
+            android:id="@+id/stopbtn"
+            android:src="@drawable/ic_action_stop"
+            android:onClick="stop"
+            android:background="@drawable/buttons"
+            android:visibility="visible"/>
+
+    </GridLayout>
+
+    <EditText
+        android:id="@+id/audio_tags"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/controlLayout"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="30dp"
+        android:singleLine="true"
+        android:hint="Tags - Nature,Cars,Funny"/>
+
+    <GridLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/audio_tags"
+        android:layout_marginTop="30dp"
+        android:layout_centerHorizontal="true"
+        android:id="@+id/submitLayout">
+
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/audio_replay"
+            android:src="@drawable/ic_action_replay"
+            android:onClick="retry"
+            android:background="@drawable/buttons"
+            android:visibility="visible"/>
+
+        <ImageButton
+            android:layout_marginLeft="24dp"
+            android:layout_marginRight="24dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/audio_cancel"
+            android:src="@drawable/ic_action_cancel"
+            android:onClick="cancel"
+            android:background="@drawable/buttons"
+            android:visibility="visible"/>
+
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/audio_done"
+            android:src="@drawable/ic_action_accept"
+            android:onClick="done"
+            android:background="@drawable/buttons"
+            android:visibility="visible"/>
+
+    </GridLayout>
+
+
+</RelativeLayout>

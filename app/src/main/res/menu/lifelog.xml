@@ -1,0 +1,24 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.android.lifelogs.LifelogActivity" >
+    <item android:id="@+id/action_audio"
+        android:title="@string/action_audio"
+        android:orderInCategory="100"
+        android:showAsAction="always"
+        android:icon="@drawable/ic_action_mic"/>
+    <item android:id="@+id/action_camera"
+        android:title="@string/action_camera"
+        android:orderInCategory="100"
+        android:showAsAction="always"
+        android:icon="@drawable/ic_action_camera"/>
+    <item android:id="@+id/action_video"
+        android:title="@string/action_video"
+        android:orderInCategory="100"
+        android:showAsAction="always"
+        android:icon="@drawable/ic_action_video"/>
+    <item android:id="@+id/action_search"
+        android:title="@string/action_search"
+        android:orderInCategory="100"
+        android:showAsAction="always"
+        android:icon="@drawable/ic_action_search"/>
+</menu>

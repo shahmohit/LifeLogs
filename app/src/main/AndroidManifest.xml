@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.android.lifelogs" >
+
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="true" />
+    <uses-feature
+        android:glEsVersion="0x00020000"
+        android:required="true" />
+
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="18" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/CustomActionBarTheme" >
+        <activity
+            android:name=".MainActivity"
+            android:label="@string/app_name"
+            android:theme="@style/NoActionBar" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".LifelogActivity"
+            android:label="@string/title_activity_lifelog" >
+        </activity>
+        <activity
+            android:name=".AudioActivity"
+            android:label="@string/title_activity_audio"
+            android:theme="@style/RecordingDialog" >
+        </activity>
+
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="5089000" />
+        <meta-data
+            android:name="com.google.android.maps.v2.API_KEY"
+            android:value="AIzaSyDfpoN6-3YSf_3n0REOO7sZFfrj84cak70" />
+
+        <service
+            android:name=".LocationService"
+            android:exported="false" >
+        </service>
+
+        <receiver
+            android:name=".RequestLocationReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.DATE_CHANGED"/>
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".PeriodicLocationService"
+            android:exported="false" >
+        </service>
+
+        <receiver
+            android:name="com.android.lifelogs.GetLocationReceiver"
+            android:enabled="true"
+            android:exported="true" >
+        </receiver>
+
+        <activity android:name="com.android.lifelogs.SearchActivity"
+            android:label="@string/title_activity_search">
+
+        </activity>
+
+    </application>
+
+</manifest>
+
