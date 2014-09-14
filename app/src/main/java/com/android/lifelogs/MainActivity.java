@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -41,6 +42,7 @@ public class MainActivity extends Activity {
             setContentView(R.layout.activity_main);
             TextView txt = (TextView) findViewById(R.id.credentials);
             txt.setText("Welcome, " + fnameTxt + " " + lnameTxt);
+            Toast.makeText(this, "Alarm Service Started", Toast.LENGTH_SHORT);
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -72,6 +74,9 @@ public class MainActivity extends Activity {
                         editor.putString("lastname",lnameTxt);
                         editor.putString("emailaddress",emailTxt);
                         editor.commit();
+                        Intent intentAlarm = new Intent(MainActivity.this, AlarmService.class);
+                        startService(intentAlarm);
+                        PreferenceManager.setDefaultValues(MainActivity.this, R.xml.preferences, false);
                         Intent intent = new Intent(MainActivity.this,MainActivity.class);
                         startActivity(intent);
                     }

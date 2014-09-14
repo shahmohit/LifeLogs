@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.Fragment;
+import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.app.IntentService;
 import android.content.BroadcastReceiver;
@@ -13,6 +14,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.IntentSender;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.location.Location;
 import android.net.Uri;
@@ -54,7 +56,9 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class LifelogActivity extends FragmentActivity {
 
@@ -62,41 +66,40 @@ public class LifelogActivity extends FragmentActivity {
     static final int REQUEST_AUDIO_CAPTURE = 1;
     static final int REQUEST_IMAGE_CAPTURE = 2;
     static final int REQUEST_VIDEO_CAPTURE = 3;
-    currLocationReceiver currLocRec;
-    String latData = null;
-    String lonData = null;
     boolean isCurrent;
     String mCurrentFilePath;
     String Tags;
-    GoogleMap mMap;
+    //GoogleMap mMap;
     private String[] mDrawerTitles;
     private DrawerLayout mDrawerLayout;
     private ListView mDrawerList;
     private ActionBarDrawerToggle mDrawerToggle;
+    DrawerAdapter dAdapter;
+    List<DrawerItem> dataList;
+    //MapFragment mapFrag;
+    Marker currMarker;
+    SharedPreferences sharedPref;
+    HomeFragment homeFragment;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Intent intent = getIntent();
-        isCurrent = intent.hasExtra("current");
-
-        if (isCurrent) {
-            mCurrentFilePath = intent.getExtras().getString("current");
-            Tags = intent.getExtras().getString("tags");
-            Log.d(ACTIVITY_NAME, mCurrentFilePath);
-            Log.d(ACTIVITY_NAME,Tags);
-        }
-        else {
-            Log.d(ACTIVITY_NAME,"No current file");
-        }
         setContentView(R.layout.activity_lifelog);
+
+        sharedPref = this.getSharedPreferences("shared_prefs", Context.MODE_PRIVATE);
+        String firstName = sharedPref.getString("firstname", "null");
+        String lastName = sharedPref.getString("lastname", "null");
         mDrawerLayout = (DrawerLayout) findViewById(R.id.lifelog_drawer);
         mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
+        dataList = new ArrayList<DrawerItem>();
         mDrawerList = (ListView) findViewById(R.id.drawer_list);
-        mDrawerTitles = getResources().getStringArray(R.array.drawer_array);
-        // Set the adapter for the list view
-        mDrawerList.setAdapter(new ArrayAdapter<String>(this,
-                R.layout.drawer_list_item,mDrawerTitles));
-        // Set the list's click listener
+
+        dataList.add(new DrawerItem(firstName + " " + lastName, R.drawable.ic_action_person));
+        dataList.add(new DrawerItem("Search", R.drawable.ic_action_search));
+        dataList.add(new DrawerItem("Preferences", R.drawable.ic_action_settings));
+        dAdapter = new DrawerAdapter(this, R.layout.drawer_item, dataList);
+        mDrawerList.setAdapter(dAdapter);
+
         mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
         mDrawerToggle = new ActionBarDrawerToggle(
                 this,                  /* host Activity */
@@ -116,18 +119,18 @@ public class LifelogActivity extends FragmentActivity {
             }
             // Defer code dependent on restoration of previous instance state.
         };
-        mDrawerLayout.post(new Runnable() {
-                @Override
-                public void run() {
-                    mDrawerToggle.syncState();
-                }
-        });
         getActionBar().setDisplayHomeAsUpEnabled(true);
         getActionBar().setHomeButtonEnabled(true);
 
         mDrawerLayout.setDrawerListener(mDrawerToggle);
-        setUpMapIfNeeded();
-        initMaps();
+        //setUpMap();
+    }
+
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        // Sync the toggle state after onRestoreInstanceState has occurred.
+        mDrawerToggle.syncState();
     }
 
     private class DrawerItemClickListener implements ListView.OnItemClickListener {
@@ -138,34 +141,36 @@ public class LifelogActivity extends FragmentActivity {
     }
 
     private void selectItem(int position) {
-        // Create a new fragment and specify the planet to show based on position
+        switch (position) {
+            case 0:
+
+            case 1:
+
+            case 2:
+                mDrawerList.setItemChecked(position, true);
+                setTitle("Preferences");
+                mDrawerLayout.closeDrawer(mDrawerList);
+                Intent intent = new Intent(LifelogActivity.this, PrefsActivity.class);
+                startActivity(intent);
+
+        }
     }
-    private class currLocationReceiver extends BroadcastReceiver {
-
-        public currLocationReceiver() {
-
-        }
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Log.d(ACTIVITY_NAME, "Receiver Got Location");
-            latData = intent.getExtras().getString(Constants.LAT_DATA);
-            lonData = intent.getExtras().getString(Constants.LON_DATA);
-            if (latData != null) {
-                Log.d(ACTIVITY_NAME, latData);
-                Log.d(ACTIVITY_NAME, lonData);
-            }
-            else {
-                Log.d(ACTIVITY_NAME,"Receiver Has Not Got Location Yet");
-            }
-
-        }
-    };
 
     @Override
     protected void onStart() {
         Log.d(ACTIVITY_NAME,"On Start");
+        homeFragment = new HomeFragment();
+        FragmentTransaction fragmentTransaction =
+                getFragmentManager().beginTransaction();
+        fragmentTransaction.add(R.id.lifelog_frame, homeFragment, "home_fragment");
+        fragmentTransaction.addToBackStack(null);
+        fragmentTransaction.commit();
         super.onStart();
-        getCurrentLocation();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
     }
 
     @Override
@@ -173,83 +178,6 @@ public class LifelogActivity extends FragmentActivity {
         super.onStop();
     }
 
-    private void getCurrentLocation() {
-        IntentFilter mStatusIntentFilter = new IntentFilter(Constants.BROADCAST_ACTION);
-        currLocationReceiver currLocRec = new currLocationReceiver();
-        LocalBroadcastManager.getInstance(this).registerReceiver(currLocRec,mStatusIntentFilter);
-        Intent mServiceIntent = new Intent(this, LocationService.class);
-        startService(mServiceIntent);
-        listenLocationReceiver();
-    }
-
-    private void setUpMapIfNeeded() {
-        // Do a null check to confirm that we have not already instantiated the map.
-        if (mMap == null) {
-            Log.d(ACTIVITY_NAME,"Map null");
-            mMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map))
-                    .getMap();
-            // Check if we were successful in obtaining the map.
-            if (mMap != null) {
-                // The Map is verified. It is now safe to manipulate the map.
-
-            }
-        }
-    }
-
-    private void listenLocationReceiver() {
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                LatLng latlng = readCurrentLocation();
-                if (latlng == null) {
-                    listenLocationReceiver();
-                }
-                else {
-                    displayCurrentMarker(latlng);
-                }
-            }
-        }, 100);
-    }
-
-    private void initMaps() {
-        mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-        LatLng initPos = new LatLng(33.4172, -111.9365);
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(initPos, 15));
-    }
-
-    private LatLng readCurrentLocation() {
-        String lat = latData;
-        String lon = lonData;
-        LatLng latlng = null;
-        if ((lat != null) && (lon != null)) {
-            latlng = new LatLng(Double.parseDouble(lat), Double.parseDouble(lon));
-            LocalBroadcastManager.getInstance(this).unregisterReceiver(currLocRec);
-        }
-        else {
-            Log.d(ACTIVITY_NAME,"LatLong not received in Activity");
-            latlng = null;
-        }
-        return latlng;
-    }
-
-    private void displayCurrentMarker(LatLng latlng) {
-        Marker currMarker = mMap.addMarker(new MarkerOptions()
-                .position(latlng)
-                .draggable(false)
-                .title("You Are Here")
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)));
-
-        currMarker.showInfoWindow();
-
-        CameraPosition cameraPosition = new CameraPosition.Builder()
-                .target(latlng)      // Sets the center of the map to Current Position
-                .zoom(17)                   // Sets the zoom
-                .bearing(90)                // Sets the orientation of the camera to east
-                .tilt(30)                   // Sets the tilt of the camera to 30 degrees
-                .build();                   // Creates a CameraPosition from the builder
-        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-
-    }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -289,10 +217,14 @@ public class LifelogActivity extends FragmentActivity {
         return super.onOptionsItemSelected(item);
     }
 
+
     public void openAudio() {
+        FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
+        fragmentTransaction.remove(homeFragment).commit();
         Intent intent = new Intent(LifelogActivity.this,AudioActivity.class);
         startActivityForResult(intent,REQUEST_AUDIO_CAPTURE);
     }
+
 
     public void openCamera() {
         dispatchTakePictureIntent();

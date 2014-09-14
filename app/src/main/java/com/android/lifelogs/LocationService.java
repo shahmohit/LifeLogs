@@ -14,11 +14,13 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesClient;
 import com.google.android.gms.location.LocationClient;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 /**
  * An {@link IntentService} subclass for handling asynchronous task requests in
  * a service on a separate handler thread.
  * <p>
- * TODO: Customize class - update intent actions, extra parameters and static
  * helper methods.
  */
 public class LocationService extends IntentService implements
@@ -28,8 +30,8 @@ public class LocationService extends IntentService implements
     String SERVICE_NAME = "LocationService";
     LocationClient mLocationClient;
     Location mLocation;
-
-
+    String actionType;
+    Intent localIntent;
     @Override
     public void onConnected(Bundle dataBundle) {
         // Display the connection status
@@ -57,11 +59,15 @@ public class LocationService extends IntentService implements
         mLocation = mLocationClient.getLastLocation();
         Double lat = mLocation.getLatitude();
         Double lon = mLocation.getLongitude();
-        Intent localIntent = new Intent(Constants.BROADCAST_ACTION);
-        localIntent.putExtra(Constants.LAT_DATA, Double.toString(lat));
-        localIntent.putExtra(Constants.LON_DATA, Double.toString(lon));
+        String date = new SimpleDateFormat("yy-MM-dd").format(new Date());
+        String time = new SimpleDateFormat("HH-mm-ss").format(new Date());
+        localIntent = new Intent(actionType);
+        localIntent.putExtra(Constants.PLAT_DATA, Double.toString(lat));
+        localIntent.putExtra(Constants.PLON_DATA, Double.toString(lon));
+        localIntent.putExtra(Constants.PDATE_DATA, date);
+        localIntent.putExtra(Constants.PTIME_DATA, time);
         LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
-        Log.d(SERVICE_NAME,"Current Location is Being Broadcast");
+        Log.d(SERVICE_NAME, "Current Location is Being Broadcast");
     }
 
     public LocationService() {
@@ -71,7 +77,7 @@ public class LocationService extends IntentService implements
     @Override
     protected void onHandleIntent(Intent intent) {
         if (intent != null) {
-            //final String action = intent.getAction();
+            actionType = intent.getAction();
             mLocationClient = new LocationClient(this,this,this);
             mLocationClient.connect();
         }

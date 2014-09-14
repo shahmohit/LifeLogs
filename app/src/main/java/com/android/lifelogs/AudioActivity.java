@@ -65,6 +65,7 @@ public class AudioActivity extends Activity {
     boolean isPaused = false;
 
     TextView time;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -96,17 +97,17 @@ public class AudioActivity extends Activity {
                 mVisualizerView.updateVisualizer(bytes);
             }
 
-            public void onFftDataCapture(Visualizer visualizer, byte[] bytes, int samplingRate) {}
+            public void onFftDataCapture(Visualizer visualizer, byte[] bytes, int samplingRate) {
+            }
         }, Visualizer.getMaxCaptureRate() / 2, true, false);
     }
 
-    public void record (View view) {
-        if (isRecording==false) {
+    public void record(View view) {
+        if (isRecording == false) {
             startRecording();
             startTime = System.currentTimeMillis();
             updateTime();
-        }
-        else {
+        } else {
             stopRecording();
         }
 
@@ -120,23 +121,22 @@ public class AudioActivity extends Activity {
                     long duration = System.currentTimeMillis() - startTime;
                     Long mm = TimeUnit.MILLISECONDS.toMinutes(duration);
                     Long ss = TimeUnit.MILLISECONDS.toSeconds(duration) -
-                              TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(duration));
-                    String mmStr = String.format("%0"+2+"d",mm);
-                    String ssStr = String.format("%0"+2+"d",ss);
+                            TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(duration));
+                    String mmStr = String.format("%0" + 2 + "d", mm);
+                    String ssStr = String.format("%0" + 2 + "d", ss);
                     Log.d(ACTIVITY_NAME, "Inside runnable");
                     time.setText(mmStr + ":" + ssStr);
                     updateTime();
                 }
             }, 100);
-        }
-        else {
+        } else {
             stopTime = System.currentTimeMillis();
             long duration = stopTime - startTime;
             Long mm = TimeUnit.MILLISECONDS.toMinutes(duration);
             Long ss = TimeUnit.MILLISECONDS.toSeconds(duration) -
                     TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(duration));
-            recMM = String.format("%0"+2+"d",mm);
-            recSS = String.format("%0"+2+"d",ss);
+            recMM = String.format("%0" + 2 + "d", mm);
+            recSS = String.format("%0" + 2 + "d", ss);
             time.setText("00:00/" + recMM + ":" + recSS);
         }
     }
@@ -156,15 +156,13 @@ public class AudioActivity extends Activity {
                         Log.d(ACTIVITY_NAME, "Inside runnable");
                         time.setText(mmStr + ":" + ssStr + "/" + recMM + ":" + recSS);
                         updatePlayTime();
-                    }
-                    else {
-                        Log.d(ACTIVITY_NAME,"Inside first else condition");
+                    } else {
+                        Log.d(ACTIVITY_NAME, "Inside first else condition");
                         time.setText("00:00/" + recMM + ":" + recSS);
                     }
                 }
             }, 100);
-        }
-        else {
+        } else {
             time.setText("00:00/" + recMM + ":" + recSS);
             Log.d(ACTIVITY_NAME, "Inside else condition");
         }
@@ -212,7 +210,7 @@ public class AudioActivity extends Activity {
         recMM = String.format("%0" + 2 + "d", mm);
         recSS = String.format("%0" + 2 + "d", ss);
         time.setText("00:00/" + recMM + ":" + recSS);
-        Log.d(ACTIVITY_NAME,Long.toString(stopTime-startTime));
+        Log.d(ACTIVITY_NAME, Long.toString(stopTime - startTime));
         mRecorder.release();
         mRecorder = null;
         recordBtn.setText("Start Recording");
@@ -224,20 +222,18 @@ public class AudioActivity extends Activity {
         mVisualizerView.setVisibility(View.VISIBLE);
     }
 
-    public void play (View view) {
-        if ((isPlaying==false) && (isPaused == false)) {
+    public void play(View view) {
+        if ((isPlaying == false) && (isPaused == false)) {
             startPlaying();
             updatePlayTime();
-        }
-        else if ((isPlaying==false) && (isPaused==true)){
+        } else if ((isPlaying == false) && (isPaused == true)) {
             resumePlaying();
-        }
-        else if ((isPlaying == true) && (isPaused == false)) {
+        } else if ((isPlaying == true) && (isPaused == false)) {
             pausePlaying();
         }
     }
 
-    public void stop (View view) {
+    public void stop(View view) {
         if ((isPlaying == true) || (isPaused == true)) {
             stopPlaying();
         }
@@ -281,17 +277,19 @@ public class AudioActivity extends Activity {
         playBtn.setImageDrawable(getResources().getDrawable(R.drawable.ic_action_pause));
         mPlayer.start();
     }
+
     private void stopPlaying() {
         isPlaying = false;
         isPaused = false;
-        Log.d(ACTIVITY_NAME,"Inside stop playing");
+        Log.d(ACTIVITY_NAME, "Inside stop playing");
         time.setText("00:00/" + recMM + ":" + recSS);
         playBtn.setImageDrawable(getResources().getDrawable(R.drawable.ic_action_play));
         mVisualizer.setEnabled(false);
         mPlayer.release();
         mPlayer = null;
     }
-    public void cancel (View view) {
+
+    public void cancel(View view) {
         if (isRecording == true) {
             stopRecording();
         }
@@ -304,14 +302,14 @@ public class AudioActivity extends Activity {
             stopPlaying();
         }
         Intent intent = new Intent();
-        setResult(Activity.RESULT_CANCELED,intent);
+        setResult(Activity.RESULT_CANCELED, intent);
         finish();
     }
 
-    public void retry (View view) {
+    public void retry(View view) {
         File file = new File(mFileName);
         boolean deleted = file.delete();
-        Log.d(ACTIVITY_NAME,"File deleted");
+        Log.d(ACTIVITY_NAME, "File deleted");
         recordBtn.setVisibility(View.VISIBLE);
         if ((isPlaying == true) || (isPaused == true)) {
             stopPlaying();
@@ -324,18 +322,17 @@ public class AudioActivity extends Activity {
         time.setText("00:00");
     }
 
-    public void done (View view) {
+    public void done(View view) {
         if (mFileName != null) {
             String tags = aTags.getText().toString();
-            Toast.makeText(AudioActivity.this,tags,Toast.LENGTH_LONG);
+            Toast.makeText(AudioActivity.this, tags, Toast.LENGTH_LONG);
             Intent intent = new Intent();
-            intent.putExtra("current",mFileName);
-            intent.putExtra("tags",tags);
-            setResult(Activity.RESULT_OK,intent);
+            intent.putExtra("current", mFileName);
+            intent.putExtra("tags", tags);
+            setResult(Activity.RESULT_OK, intent);
             finish();
-        }
-        else {
-            Log.d(ACTIVITY_NAME,"No recording found");
+        } else {
+            Log.d(ACTIVITY_NAME, "No recording found");
         }
     }
 
@@ -372,66 +369,5 @@ public class AudioActivity extends Activity {
             return true;
         }
         return super.onOptionsItemSelected(item);
-    }
-}
-
-class VisualizerView extends View {
-    private byte[] mBytes;
-    private float[] mPoints;
-    private Rect mRect = new Rect();
-
-    private Paint mForePaint = new Paint();
-
-    public VisualizerView(Context context) {
-        super(context);
-        init();
-    }
-
-    public VisualizerView(Context context, AttributeSet attrs) {
-        super(context,attrs);
-        init();
-    };
-
-    public VisualizerView(Context context, AttributeSet attrs, int i) {
-        super(context,attrs,i);
-        init();
-    };
-
-    private void init() {
-        mBytes = null;
-
-        mForePaint.setStrokeWidth(10f);
-        mForePaint.setAntiAlias(true);
-        mForePaint.setColor(getResources().getColor(R.color.wave));
-    }
-
-    public void updateVisualizer(byte[] bytes) {
-        mBytes = bytes;
-        invalidate();
-    }
-    @Override
-    protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-
-        if (mBytes == null) {
-            return;
-        }
-
-        if (mPoints == null || mPoints.length < mBytes.length * 4) {
-            mPoints = new float[mBytes.length * 4];
-        }
-
-        mRect.set(0, 0, getWidth(), getHeight());
-
-        for (int i = 0; i < mBytes.length - 1; i++) {
-            mPoints[i * 4] = mRect.width() * i / (mBytes.length - 1);
-            mPoints[i * 4 + 1] = mRect.height() / 2
-                    + ((byte) (mBytes[i] + 128)) * (mRect.height() / 2) / 128;
-            mPoints[i * 4 + 2] = mRect.width() * (i + 1) / (mBytes.length - 1);
-            mPoints[i * 4 + 3] = mRect.height() / 2
-                    + ((byte) (mBytes[i + 1] + 128)) * (mRect.height() / 2) / 128;
-        }
-
-        canvas.drawLines(mPoints, mForePaint);
     }
 }

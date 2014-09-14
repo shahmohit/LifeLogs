@@ -15,8 +15,15 @@
     <string name="action_search">Search</string>
     <string name="title_activity_audio">AudioActivity</string>
     <string name="title_activity_search">LifeLogs</string>
+
     <string-array name="drawer_array">
-    <item>User</item>
-    <item>Search</item>
-    <item>Settings</item></string-array>
+        <item>User</item>
+        <item>Search</item>
+        <item>Settings</item>
+    </string-array>
+
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="title_activity_preference">PreferenceActivity</string>
+    <string name="title_activity_prefs">PrefsActivity</string>
+
 </resources>

@@ -1,12 +1,17 @@
 package com.android.lifelogs;
 
 import android.app.IntentService;
+import android.app.Service;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.Context;
 import android.content.IntentSender;
+import android.database.DatabaseUtils;
+import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
@@ -22,24 +27,40 @@ import java.util.Date;
  * An {@link IntentService} subclass for handling asynchronous task requests in
  * a service on a separate handler thread.
  * <p>
- * TODO: Customize class - update intent actions, extra parameters and static
  * helper methods.
  */
-public class PeriodicLocationService extends IntentService implements
+public class PeriodicLocationService extends Service implements
         GooglePlayServicesClient.ConnectionCallbacks,
         GooglePlayServicesClient.OnConnectionFailedListener {
 
     String SERVICE_NAME = "PeriodicLocationService";
     LocationClient mLocationClient;
     Location mLocation;
-    int runCount = 1;
+    LogReaderdBHelper mDbHelper;
+
+    public void onCreate() {
+        super.onCreate();
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d("OnStart", "");
+        mLocationClient = new LocationClient(this, this, this);
+        mDbHelper = new LogReaderdBHelper(PeriodicLocationService.this);
+        mLocationClient.connect();
+        return START_NOT_STICKY;
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
 
     @Override
     public void onConnected(Bundle dataBundle) {
         // Display the connection status
         Log.d(SERVICE_NAME,"Location Service Connected");
-        //mLocationClient.setMockMode(true);
-        periodicLocation();
+        saveCurrentLocation();
     }
 
     @Override
@@ -58,52 +79,28 @@ public class PeriodicLocationService extends IntentService implements
         }
     }
 
-    private void getCurrentLocation() {
+    private void saveCurrentLocation() {
         mLocation = mLocationClient.getLastLocation();
         Double lat = mLocation.getLatitude();
         Double lon = mLocation.getLongitude();
         String date = new SimpleDateFormat("yy-MM-dd").format(new Date());
         String time = new SimpleDateFormat("HH-mm-ss").format(new Date());
-        Intent localIntent = new Intent(Constants.PERIODIC_BROADCAST_ACTION);
-        localIntent.putExtra(Constants.PLAT_DATA, Double.toString(lat));
-        localIntent.putExtra(Constants.PLON_DATA, Double.toString(lon));
-        localIntent.putExtra(Constants.PDATE_DATA, date);
-        localIntent.putExtra(Constants.PTIME_DATA, time);
-        Log.d(SERVICE_NAME, localIntent.getAction().toString());
-        Log.d(SERVICE_NAME, "Periodic Current Location Broadcast");
-        LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
-    }
 
-    private void periodicLocation() {
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (runCount < Constants.maxCount) {
-                    getCurrentLocation();
-                    runCount = runCount+1;
-                    Log.d(SERVICE_NAME, Integer.toString(runCount));
-                    periodicLocation();
-                }
-                else {
-                    mLocationClient.disconnect();
-                    Log.d(SERVICE_NAME,"Periodic Location Complete");
-                }
-            }
-        }, 10000);
+        SQLiteDatabase db = mDbHelper.getWritableDatabase();
 
-    }
-
-    public PeriodicLocationService() {
-        super("PeriodicLocationService");
-    }
-
-    @Override
-    protected void onHandleIntent(Intent intent) {
-        if (intent != null) {
-            //final String action = intent.getAction();
-            mLocationClient = new LocationClient(this,this,this);
-            mLocationClient.connect();
-        }
+        ContentValues values = new ContentValues();
+        values.put(LogReaderContract.LogEntry.COLUMN_NAME_ENTRY_ID, date + ":" + time);
+        values.put(LogReaderContract.LogEntry.COLUMN_NAME_DATE, date);
+        values.put(LogReaderContract.LogEntry.COLUMN_NAME_TIME, time);
+        values.put(LogReaderContract.LogEntry.COLUMN_NAME_LAT, lat);
+        values.put(LogReaderContract.LogEntry.COLUMN_NAME_LON, lon);
+        long newRowId;
+        newRowId = db.insert(
+                LogReaderContract.LogEntry.TABLE_NAME,
+                null,
+                values);
+        Long numRows = DatabaseUtils.queryNumEntries(db, LogReaderContract.LogEntry.TABLE_NAME);
+        Log.d(SERVICE_NAME, "Database rows = " + Long.toString(numRows));
     }
 
 }
