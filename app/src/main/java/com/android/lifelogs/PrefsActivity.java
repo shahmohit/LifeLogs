@@ -24,6 +24,7 @@ public class PrefsActivity extends PreferenceActivity {
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.preferences);
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        getActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
     @Override

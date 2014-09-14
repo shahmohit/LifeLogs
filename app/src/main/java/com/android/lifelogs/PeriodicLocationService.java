@@ -26,7 +26,7 @@ import java.util.Date;
 /**
  * An {@link IntentService} subclass for handling asynchronous task requests in
  * a service on a separate handler thread.
- * <p>
+ * <p/>
  * helper methods.
  */
 public class PeriodicLocationService extends Service implements
@@ -44,7 +44,6 @@ public class PeriodicLocationService extends Service implements
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d("OnStart", "");
         mLocationClient = new LocationClient(this, this, this);
         mDbHelper = new LogReaderdBHelper(PeriodicLocationService.this);
         mLocationClient.connect();
@@ -59,7 +58,7 @@ public class PeriodicLocationService extends Service implements
     @Override
     public void onConnected(Bundle dataBundle) {
         // Display the connection status
-        Log.d(SERVICE_NAME,"Location Service Connected");
+        Log.d(SERVICE_NAME, "Location Service Connected");
         saveCurrentLocation();
     }
 
@@ -72,7 +71,7 @@ public class PeriodicLocationService extends Service implements
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
         if (connectionResult.hasResolution()) {
-            Log.d(SERVICE_NAME,"Connection Failed");
+            Log.d(SERVICE_NAME, "Connection Failed");
 
         } else {
             Log.d(SERVICE_NAME, "Connection Failed");
@@ -101,6 +100,7 @@ public class PeriodicLocationService extends Service implements
                 values);
         Long numRows = DatabaseUtils.queryNumEntries(db, LogReaderContract.LogEntry.TABLE_NAME);
         Log.d(SERVICE_NAME, "Database rows = " + Long.toString(numRows));
+        mLocationClient.disconnect();
     }
 
 }

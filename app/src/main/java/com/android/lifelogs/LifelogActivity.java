@@ -60,27 +60,33 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-public class LifelogActivity extends FragmentActivity {
+public class LifelogActivity extends FragmentActivity implements
+        AudioDialogFragment.AudioDialogListener,
+        ImageDialogFragment.ImageDialogListener,
+        VideoDialogFragment.VideoDialogListener {
 
     String ACTIVITY_NAME = "LifelogActivity";
     static final int REQUEST_AUDIO_CAPTURE = 1;
     static final int REQUEST_IMAGE_CAPTURE = 2;
     static final int REQUEST_VIDEO_CAPTURE = 3;
-    boolean isCurrent;
     String mCurrentFilePath;
-    String Tags;
-    //GoogleMap mMap;
-    private String[] mDrawerTitles;
+    String mCurrentTags;
+    String mMediaType;
+
     private DrawerLayout mDrawerLayout;
     private ListView mDrawerList;
     private ActionBarDrawerToggle mDrawerToggle;
     DrawerAdapter dAdapter;
     List<DrawerItem> dataList;
-    //MapFragment mapFrag;
-    Marker currMarker;
+
     SharedPreferences sharedPref;
     HomeFragment homeFragment;
 
+    String homeTag = "home_fragment";
+
+    VideoDialogFragment videoPreview;
+    ImageDialogFragment imagePreview;
+    AudioDialogFragment audioPreview;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -123,6 +129,13 @@ public class LifelogActivity extends FragmentActivity {
         getActionBar().setHomeButtonEnabled(true);
 
         mDrawerLayout.setDrawerListener(mDrawerToggle);
+
+        homeFragment = new HomeFragment();
+        FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
+        fragmentTransaction.add(R.id.lifelog_frame, homeFragment, homeTag);
+        fragmentTransaction.addToBackStack(null);
+        fragmentTransaction.commit();
+
         //setUpMap();
     }
 
@@ -150,6 +163,9 @@ public class LifelogActivity extends FragmentActivity {
                 mDrawerList.setItemChecked(position, true);
                 setTitle("Preferences");
                 mDrawerLayout.closeDrawer(mDrawerList);
+                FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
+                fragmentTransaction.addToBackStack(homeTag);
+
                 Intent intent = new Intent(LifelogActivity.this, PrefsActivity.class);
                 startActivity(intent);
 
@@ -158,13 +174,6 @@ public class LifelogActivity extends FragmentActivity {
 
     @Override
     protected void onStart() {
-        Log.d(ACTIVITY_NAME,"On Start");
-        homeFragment = new HomeFragment();
-        FragmentTransaction fragmentTransaction =
-                getFragmentManager().beginTransaction();
-        fragmentTransaction.add(R.id.lifelog_frame, homeFragment, "home_fragment");
-        fragmentTransaction.addToBackStack(null);
-        fragmentTransaction.commit();
         super.onStart();
     }
 
@@ -219,10 +228,20 @@ public class LifelogActivity extends FragmentActivity {
 
 
     public void openAudio() {
-        FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
-        fragmentTransaction.remove(homeFragment).commit();
-        Intent intent = new Intent(LifelogActivity.this,AudioActivity.class);
-        startActivityForResult(intent,REQUEST_AUDIO_CAPTURE);
+        try {
+            createAudioFile();
+        } catch (IOException e) {
+
+        }
+        FragmentTransaction ft = getFragmentManager().beginTransaction();
+        Fragment prev = getFragmentManager().findFragmentByTag("audioTags");
+        if (prev != null) {
+            ft.remove(prev);
+        }
+        ft.addToBackStack(null);
+        audioPreview = AudioDialogFragment.newInstance(mCurrentFilePath);
+        audioPreview.show(ft, "audioTags");
+
     }
 
 
@@ -239,8 +258,20 @@ public class LifelogActivity extends FragmentActivity {
         startActivity(intent);
     }
 
+    private String createAudioFile() throws IOException {
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String audioFileName = "AAC_" + timeStamp + "_";
+        File storageDir = getExternalFilesDir(null);
+        File audio = File.createTempFile(
+                audioFileName,  /* prefix */
+                ".m4a",         /* suffix */
+                storageDir      /* directory */
+        );
+        mCurrentFilePath = audio.getAbsolutePath();
+        return audio.getAbsolutePath();
+    }
+
     private File createImageFile() throws IOException {
-        // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String imageFileName = "JPEG_" + timeStamp + "_";
         File storageDir = getExternalFilesDir(null);
@@ -249,30 +280,8 @@ public class LifelogActivity extends FragmentActivity {
                 ".jpg",         /* suffix */
                 storageDir      /* directory */
         );
-
-        // Save a file: path for use with ACTION_VIEW intents
         mCurrentFilePath = image.getAbsolutePath();
         return image;
-    }
-
-    private void dispatchTakePictureIntent() {
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        // Ensure that there's a camera activity to handle the intent
-        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            // Create the File where the photo should go
-            File photoFile = null;
-            try {
-                photoFile = createImageFile();
-            } catch (IOException ex) {
-                // Error occurred while creating the File
-            }
-            // Continue only if the File was successfully created
-            if (photoFile != null) {
-                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT,
-                        Uri.fromFile(photoFile));
-                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
-            }
-        }
     }
 
     private File createVideoFile() throws IOException {
@@ -285,24 +294,34 @@ public class LifelogActivity extends FragmentActivity {
                 ".mp4",         /* suffix */
                 storageDir      /* directory */
         );
-
-        // Save a file: path for use with ACTION_VIEW intents
         mCurrentFilePath = video.getAbsolutePath();
         return video;
     }
 
+    private void dispatchTakePictureIntent() {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            File photoFile = null;
+            try {
+                photoFile = createImageFile();
+            } catch (IOException ex) {
+            }
+            if (photoFile != null) {
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT,
+                        Uri.fromFile(photoFile));
+                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+            }
+        }
+    }
+
     private void dispatchRecordVideoIntent() {
         Intent takeVideoIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
-        // Ensure that there's a camera activity to handle the intent
         if (takeVideoIntent.resolveActivity(getPackageManager()) != null) {
-            // Create the File where the photo should go
             File videoFile = null;
             try {
                 videoFile = createVideoFile();
             } catch (IOException ex) {
-                // Error occurred while creating the File
             }
-            // Continue only if the File was successfully created
             if (videoFile != null) {
                 takeVideoIntent.putExtra(MediaStore.EXTRA_OUTPUT,
                         Uri.fromFile(videoFile));
@@ -321,8 +340,8 @@ public class LifelogActivity extends FragmentActivity {
                     ft.remove(prev);
                 }
                 ft.addToBackStack(null);
-                DialogFragment newFragment = VideoDialogFragment.newInstance(mCurrentFilePath);
-                newFragment.show(ft, "videoTags");
+                videoPreview = VideoDialogFragment.newInstance(mCurrentFilePath);
+                videoPreview.show(ft, "videoTags");
 
             }
         }
@@ -335,118 +354,57 @@ public class LifelogActivity extends FragmentActivity {
                     ft.remove(prev);
                 }
                 ft.addToBackStack(null);
-                DialogFragment newFragment = ImageDialogFragment.newInstance(mCurrentFilePath);
-                newFragment.show(ft, "imageTags");
+                imagePreview = ImageDialogFragment.newInstance(mCurrentFilePath);
+                imagePreview.show(ft, "imageTags");
             }
         }
 
-        else if (requestCode == REQUEST_AUDIO_CAPTURE) {
-            if (resultCode == RESULT_OK) {
-                Bundle extras = data.getExtras();
-                Tags = extras.getString("tags");
-                mCurrentFilePath = extras.getString("current");
-                Log.d(ACTIVITY_NAME,mCurrentFilePath);
-                Log.d(ACTIVITY_NAME,Tags);
-            }
-            else {
-                Log.d(ACTIVITY_NAME,"No Audio Recording Done");
-            }
-        }
     }
 
-
-    public static class VideoDialogFragment extends DialogFragment {
-        VideoView vView = null;
-        EditText vTags;
-
-        static VideoDialogFragment newInstance(String fPath) {
-            VideoDialogFragment f = new VideoDialogFragment();
-
-            // Supply num input as an argument.
-            Bundle args = new Bundle();
-            args.putString("fPath", fPath);
-            f.setArguments(args);
-
-            return f;
-        }
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            String fPath = getArguments().getString("fPath");
-            // Use the Builder class for convenient dialog construction
-            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-            LayoutInflater inflater = getActivity().getLayoutInflater();
-            View v = inflater.inflate(R.layout.video_tags, null);
-            v.setBackgroundResource(Color.TRANSPARENT);
-            builder.setView(v);
-            this.vView = (VideoView) v.findViewById(R.id.vsurface_view);
-            this.vView.setVideoPath(fPath);
-            this.vView.start();
-
-            //builder.setTitle("Suggest Tags?");
-            builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int id) {
-                    EditText vTags = (EditText) VideoDialogFragment.this.getDialog().findViewById(R.id.video_tags);
-                    //Tags = vTags.getText().toString();
-                    VideoDialogFragment.this.getDialog().dismiss();
-                    //Toast.makeText(LifelogActivity.this,Tags,Toast.LENGTH_LONG).show();
-                }
-            });
-            builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int id) {
-                    // User cancelled the dialog
-                    VideoDialogFragment.this.getDialog().cancel();
-                }
-            });
-            // Create the AlertDialog object and return it
-            return builder.create();
-        }
+    @Override
+    public void onAudioPositiveClick(DialogFragment dialog) {
+        mMediaType = Constants.AUDIO_TYPE;
+        mCurrentFilePath = audioPreview.getFilePath();
+        mCurrentTags = audioPreview.getTags();
+        Log.d(ACTIVITY_NAME, mMediaType);
+        Log.d(ACTIVITY_NAME, mCurrentFilePath);
+        Log.d(ACTIVITY_NAME, mCurrentTags);
     }
 
-    public static class ImageDialogFragment extends DialogFragment {
-        ImageView iView = null;
-        EditText iTags;
-        static ImageDialogFragment newInstance(String fPath) {
-            ImageDialogFragment f = new ImageDialogFragment();
+    @Override
+    public void onAudioNegativeClick(DialogFragment dialog) {
 
-            // Supply num input as an argument.
-            Bundle args = new Bundle();
-            args.putString("fPath", fPath);
-            f.setArguments(args);
-
-            return f;
-        }
-
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            String fPath = getArguments().getString("fPath");
-            // Use the Builder class for convenient dialog construction
-            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-            LayoutInflater inflater = getActivity().getLayoutInflater();
-            View v = inflater.inflate(R.layout.image_tags, null);
-            v.setBackgroundResource(Color.TRANSPARENT);
-            builder.setView(v);
-            this.iView = (ImageView) v.findViewById(R.id.isurface_view);
-            this.iView.setImageURI(Uri.parse("file://" + fPath));
-            this.iView.setScaleType(ImageView.ScaleType.FIT_XY);
-            builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int id) {
-                    EditText iTags = (EditText) ImageDialogFragment.this.getDialog().findViewById(R.id.image_tags);
-                    //Tags = iTags.getText().toString();
-                    ImageDialogFragment.this.getDialog().dismiss();
-                    //Toast.makeText(LifelogActivity.this,Tags,Toast.LENGTH_LONG).show();
-                }
-            });
-            builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int id) {
-                    // User cancelled the dialog
-                    ImageDialogFragment.this.getDialog().cancel();
-                }
-            });
-            // Create the AlertDialog object and return it
-            return builder.create();
-        }
     }
+
+    @Override
+    public void onImagePositiveClick(DialogFragment dialog) {
+        mMediaType = Constants.IMAGE_TYPE;
+        mCurrentFilePath = imagePreview.getFilePath();
+        mCurrentTags = imagePreview.getTags();
+        Log.d(ACTIVITY_NAME, mMediaType);
+        Log.d(ACTIVITY_NAME, mCurrentFilePath);
+        Log.d(ACTIVITY_NAME, mCurrentTags);
+    }
+
+    @Override
+    public void onImageNegativeClick(DialogFragment dialog) {
+
+    }
+
+    @Override
+    public void onVideoPositiveClick(DialogFragment dialog) {
+        mMediaType = Constants.VIDEO_TYPE;
+        mCurrentFilePath = videoPreview.getFilePath();
+        mCurrentTags = videoPreview.getTags();
+        Log.d(ACTIVITY_NAME, mMediaType);
+        Log.d(ACTIVITY_NAME, mCurrentFilePath);
+        Log.d(ACTIVITY_NAME, mCurrentTags);
+    }
+
+    @Override
+    public void onVideoNegativeClick(DialogFragment dialog) {
+
+    }
+
 
 }

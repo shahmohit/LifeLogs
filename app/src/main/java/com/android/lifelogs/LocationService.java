@@ -20,7 +20,7 @@ import java.util.Date;
 /**
  * An {@link IntentService} subclass for handling asynchronous task requests in
  * a service on a separate handler thread.
- * <p>
+ * <p/>
  * helper methods.
  */
 public class LocationService extends IntentService implements
@@ -32,23 +32,24 @@ public class LocationService extends IntentService implements
     Location mLocation;
     String actionType;
     Intent localIntent;
+
     @Override
     public void onConnected(Bundle dataBundle) {
         // Display the connection status
-        Log.d(SERVICE_NAME,"Location Service Connected");
+        Log.d(SERVICE_NAME, "Location Service Connected");
         getCurrentLocation();
     }
 
     @Override
     public void onDisconnected() {
         // Display the connection status
-        Log.d(SERVICE_NAME,"Location Service Disconnected");
+        Log.d(SERVICE_NAME, "Location Service Disconnected");
     }
 
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
-       if (connectionResult.hasResolution()) {
-            Log.d(SERVICE_NAME,"Connection Failed");
+        if (connectionResult.hasResolution()) {
+            Log.d(SERVICE_NAME, "Connection Failed");
 
         } else {
             Log.d(SERVICE_NAME, "Connection Failed");
@@ -68,6 +69,7 @@ public class LocationService extends IntentService implements
         localIntent.putExtra(Constants.PTIME_DATA, time);
         LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
         Log.d(SERVICE_NAME, "Current Location is Being Broadcast");
+        mLocationClient.disconnect();
     }
 
     public LocationService() {
@@ -78,7 +80,7 @@ public class LocationService extends IntentService implements
     protected void onHandleIntent(Intent intent) {
         if (intent != null) {
             actionType = intent.getAction();
-            mLocationClient = new LocationClient(this,this,this);
+            mLocationClient = new LocationClient(this, this, this);
             mLocationClient.connect();
         }
     }

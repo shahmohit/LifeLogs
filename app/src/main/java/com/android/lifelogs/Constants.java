@@ -4,6 +4,9 @@ package com.android.lifelogs;
  * Created by mohit on 9/12/14.
  */
 public class Constants {
+    public static final String AUDIO_TYPE = "audio";
+    public static final String IMAGE_TYPE = "image";
+    public static final String VIDEO_TYPE = "video";
     public static final String BROADCAST_ACTION = "service.LOCATION";
     public static final String PLAT_DATA = "service.PLATITUDE";
     public static final String PLON_DATA = "service.PLONGITUDE";

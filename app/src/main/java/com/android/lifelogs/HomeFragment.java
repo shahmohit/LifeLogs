@@ -53,44 +53,53 @@ public class HomeFragment extends Fragment {
         mapFragment = new MapFragment();
         FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
         transaction.add(R.id.home_fragment, mapFragment, MAP_TAG).commit();
+
         return rootView;
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        mMap = ((MapFragment) getChildFragmentManager().findFragmentByTag(MAP_TAG)).getMap();
-        initMaps();
-        getCurrentLocation();
-    }
-
-    @Override
-    public void onDestroyView() {
-        //FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
-        //transaction.remove(mapFragment);
-        //transaction.commit();
-        super.onDestroyView();
-    }
-
-    private void initMaps() {
-        if (mMap != null) {
-            Log.d(FRAGMENT_NAME, "Map not null");
-        } else {
-            Log.d(FRAGMENT_NAME, "Map null");
-        }
-
-        mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-        LatLng initPos = new LatLng(33.4172, -111.9365);
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(initPos, 15));
-    }
-
-    private void getCurrentLocation() {
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
         IntentFilter mStatusIntentFilter = new IntentFilter(Constants.BROADCAST_ACTION);
         currLocationReceiver currLocRec = new currLocationReceiver();
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(currLocRec, mStatusIntentFilter);
         Intent mServiceIntent = new Intent(getActivity(), LocationService.class);
         mServiceIntent.setAction(Constants.BROADCAST_ACTION);
         getActivity().startService(mServiceIntent);
+
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        mMap = ((MapFragment) getChildFragmentManager().findFragmentByTag(MAP_TAG)).getMap();
+        if (mMap != null) {
+            initMaps();
+            getCurrentLocation();
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    public void onDestroyView() {
+        //FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
+        //transaction.remove(mapFragment);
+        //transaction.addToBackStack(MAP_TAG);
+        //transaction.commit();
+        super.onDestroyView();
+    }
+
+    private void initMaps() {
+        mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+        LatLng initPos = new LatLng(33.4172, -111.9365);
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(initPos, 15));
+    }
+
+    private void getCurrentLocation() {
         listenLocationReceiver();
     }
 
